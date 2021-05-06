@@ -2,7 +2,9 @@ package com.example.recaptcha
 
 import android.os.Bundle
 import android.util.Log
+import android.view.View
 import android.widget.Button
+import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.android.volley.*
@@ -20,15 +22,20 @@ class MainActivity : AppCompatActivity() {
     private val siteKey = "6LcCrcYaAAAAABMgbAV4rQQWMoORE1ILjkRA3_s4"
     private val secretKey = "6LcCrcYaAAAAAFcgceHN2ZrB1Dd8YC9vqvFRzN1H"
 
-    private lateinit var launchButton: Button
+    private lateinit var button1: Button
+    private lateinit var button2: Button
+    private lateinit var text: TextView
     private lateinit var queue: RequestQueue
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
         queue = Volley.newRequestQueue(applicationContext)
-        launchButton = findViewById(R.id.button)
-        launchButton.setOnClickListener { launchRecaptcha() }
+        button1 = findViewById(R.id.button1)
+        button1.setOnClickListener { launchRecaptcha() }
+        button2 = findViewById(R.id.button2)
+        button2.setOnClickListener { updateUIForVerification(false) }
+        text = findViewById(R.id.text)
     }
 
     private fun launchRecaptcha() {
@@ -66,7 +73,7 @@ class MainActivity : AppCompatActivity() {
                 try {
                     val jsonObject = JSONObject(response)
                     if (jsonObject.getBoolean("success")) {
-                        Toast.makeText(applicationContext, "It worked!",Toast.LENGTH_LONG).show()
+                        updateUIForVerification(true)
                     } else {
                         Toast.makeText(
                             applicationContext,
@@ -92,5 +99,17 @@ class MainActivity : AppCompatActivity() {
             DefaultRetryPolicy.DEFAULT_BACKOFF_MULT
         )
         queue.add(request)
+    }
+
+    private fun updateUIForVerification(verified: Boolean) {
+        if (verified) {
+            button1.visibility = View.GONE
+            button2.visibility = View.VISIBLE
+            text.text = "User Verified!"
+        } else {
+            button1.visibility = View.VISIBLE
+            button2.visibility = View.GONE
+            text.text = "CS4264 Term Project"
+        }
     }
 }
