@@ -67,25 +67,9 @@ class MainActivity : AppCompatActivity() {
 
     private fun handleSiteVerification(tokenResult: String) {
         val url = "https://www.google.com/recaptcha/api/siteverify"
-        val request: StringRequest = object : StringRequest(
-            Method.POST, url,
-            Response.Listener { response ->
-                try {
-                    val jsonObject = JSONObject(response)
-                    if (jsonObject.getBoolean("success")) {
-                        updateUIForVerification(true)
-                    } else {
-                        Toast.makeText(
-                            applicationContext,
-                            jsonObject.getString("error-codes").toString(),
-                            Toast.LENGTH_LONG
-                        ).show()
-                    }
-                } catch (ex: Exception) {
-                    Log.d("INFO", "JSON exception: " + ex.message)
-                }
-            },
-            Response.ErrorListener { error -> Log.d("INFO", "Error message: " + error.message) }) {
+        val request: StringRequest = object : StringRequest(Method.POST, url,
+            Response.Listener { response -> handleResponse(response) },
+            Response.ErrorListener { error -> Log.d("INFO", error.message.toString()) }) {
             override fun getParams(): Map<String, String> {
                 val params: MutableMap<String, String> = HashMap()
                 params["secret"] = secretKey
@@ -93,12 +77,26 @@ class MainActivity : AppCompatActivity() {
                 return params
             }
         }
-        request.retryPolicy = DefaultRetryPolicy(
-            50000,
-            DefaultRetryPolicy.DEFAULT_MAX_RETRIES,
-            DefaultRetryPolicy.DEFAULT_BACKOFF_MULT
-        )
+
+        request.retryPolicy = DefaultRetryPolicy(50000, DefaultRetryPolicy.DEFAULT_MAX_RETRIES, DefaultRetryPolicy.DEFAULT_BACKOFF_MULT)
         queue.add(request)
+    }
+
+    private fun handleResponse(response: String) {
+        try {
+            val jsonObject = JSONObject(response)
+            if (jsonObject.getBoolean("success")) {
+                updateUIForVerification(true)
+            } else {
+                Toast.makeText(
+                        applicationContext,
+                        jsonObject.getString("error-codes").toString(),
+                        Toast.LENGTH_LONG
+                ).show()
+            }
+        } catch (ex: Exception) {
+            Log.d("INFO", "JSON exception: " + ex.message)
+        }
     }
 
     private fun updateUIForVerification(verified: Boolean) {
